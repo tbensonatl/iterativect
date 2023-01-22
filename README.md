@@ -19,7 +19,7 @@ The implemented algorithm is OS-PSIRT-N, which is a modified version of the stan
 
 $x^{k+1} = x^{k} + C A^T R(b - A x^{k})$
 
-where $x^{k}$ is the $k$-th image, $C$ is a diagonal matrix of the inverse column sums of $A$, $R$ is a diagonal matrix of the inverse row sums of $A$, $b$ is the projection data, and $A$ is the system matrix defined by the projection model. This converges to the weighted least squares solution $\| Ax - b \|_R^2$.
+where $x^{k}$ is the $k$-th image, $C$ is a diagonal matrix of the inverse column sums of $A$, $R$ is a diagonal matrix of the inverse row sums of $A$, $b$ is the projection data, and $A$ is the system matrix defined by the projection model. This converges to the weighted least squares solution $\lVert Ax - b \rVert_R^2$.
 
 Adding subsets yields a modified version where each subset $s$ yields a version of $C$, $A$, $R$, and $b$ that correspond to the reduced set of rows of $A$ used for subset $s$:
 
@@ -27,13 +27,13 @@ $x^{k+1} = x^{k} + C_s A^T_s R_s(b_s - A_s x^{k})$
 
 This version is problematic because we now have $N$ volume-sized matrices $C_0, C_1, ..., C_{N-1}$ that we either need to store or fully recompute for each subset and iteration.
 
-The modified version of SIRT replaces $C_s$ with the inverse of the maximum column sum of $A_s$, which is shown in [1] to still converge to the same result. Note that the maximum column sum of $A$ is the 1-norm, i.e. $\| A \|_1$. PSIRT further modifies this approach by applying a scalar of $2/(1+\epsilon)$ where $\epsilon$ is small [2].
+The modified version of SIRT replaces $C_s$ with the inverse of the maximum column sum of $A_s$, which is shown in [1] to still converge to the same result. Note that the maximum column sum of $A$ is the 1-norm, i.e. $\lVert A \rVert_1$. PSIRT further modifies this approach by applying a scalar of $2/(1+\epsilon)$ where $\epsilon$ is small [2].
 
 We thus have the following final update equation:
 
 $x^{k+1} = x^{k} + \alpha_s A^T_s R_s(b_s - A x^{k})$
 
-where $\alpha_s = \frac{2}{(1+\epsilon)\| A_s \|_1}$.
+where $\alpha_s = \frac{2}{(1+\epsilon)\lVert A_s \rVert_1}$.
 
 ## Projection Model
 
@@ -41,7 +41,7 @@ The forward model is a ray-driven line intersection based model as described in 
 
 ## Output Image Units / Format
 
-The reconstruction is performed in the x-ray linear attenuation coefficient space using single precision floating point arithmetic. For example, water will reconstruct as roughly 0.02 cm^-1. The reconstructed units are then converted to Hounsfield units using the WaterAttenuationCoefficient field in the DICOM-CT-PD files. The linear attenuation coefficient of water is energy dependent and thus it can vary per-scan and depending on the pre-processing and calibration factors. The conversion to Hounsfield units is given by HU = 1000 * (mu - mu_water) / mu_water where mu is the reconstructed voxel value and mu_water is the linear attenuation coefficient of water stored in the WaterAttenutationCoefficient DICOM-CT-PD field.
+The reconstruction is performed in the x-ray linear attenuation coefficient space using single precision floating point arithmetic. For example, water will reconstruct as roughly 0.2 cm^-1. The reconstructed units are then converted to Hounsfield units using the WaterAttenuationCoefficient field in the DICOM-CT-PD files. The linear attenuation coefficient of water is energy dependent and thus it can vary per-scan and depending on the pre-processing and calibration factors. The conversion to Hounsfield units is given by HU = 1000 * (mu - mu_water) / mu_water where mu is the reconstructed voxel value and mu_water is the linear attenuation coefficient of water stored in the WaterAttenutationCoefficient DICOM-CT-PD field.
 
 The Hounsfield units are then rounded to the nearest integral value, clamped to the range [-32768, 32767], and finally stored as signed int16 values. In Hounsfield units, air is -1000 and water is 0. Note that it is common in some other formats to add a bias of at least 1000 and store the resulting value as uint16 values (this adds dynamic range on the high-attenuation end while adding the reasonable assumption that nothing has lower attenuation coefficients than open air).
 
